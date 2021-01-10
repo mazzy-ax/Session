@@ -1,0 +1,66 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; Microsoft Dynamics Class: Session unloaded
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #Session
+    PROPERTIES
+      Name                #Session
+      Extends             #xSession
+      RunOn               #Called from
+    ENDPROPERTIES
+    
+    METHODS
+      Version: 3
+      SOURCE #isInRoleAdmin
+        #//
+        #// https://github.com/mazzy-ax/SysSession
+        #//
+        #// возвращает true если:
+        #// пользователь наделен правами локального администратора
+        #// и текущая сессия была запущена runAsAdministrator
+        #//
+        #public static boolean isInRoleAdmin()
+        #{
+        #    anytype perm = new InteropPermission(InteropKind::ClrInterop).assert();
+        #
+        #    System.Security.Principal.WindowsIdentity    id = System.Security.Principal.WindowsIdentity::GetCurrent();
+        #    System.Security.Principal.WindowsPrincipal   principal = new System.Security.Principal.WindowsPrincipal(id);
+        #    System.Security.Principal.WindowsBuiltInRole admin = ClrInterop::parseClrEnum('System.Security.Principal.WindowsBuiltInRole','Administrator');
+        #
+        #    boolean ret = principal.IsInRole(admin);
+        #    ;
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: PRN
+
+; Microsoft Dynamics Project : Session unloaded
+; --------------------------------------------------------------------------------
+  PROJECTVERSION 2
+  
+  PROJECT #Session
+   SHARED
+  PROPERTIES
+    Name                #Session
+  ENDPROPERTIES
+  
+    BEGINNODE
+      FILETYPE 0
+      UTILTYPE 45
+      UTILOBJECTID 61440
+      NODETYPE 329
+      NAME #Session
+    ENDNODE
+  ENDPROJECT
+  
+
+***Element: END

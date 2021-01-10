@@ -1,0 +1,67 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; Microsoft Dynamics AX Class: Session unloaded
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #Session
+    PROPERTIES
+      Name                #Session
+      Extends             #xSession
+      Origin              #{2D07F000-0000-1000-5365-7373696F6E00}
+      LegacyId            #61440
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #isInRoleAdmin
+        #//
+        #// https://github.com/mazzy-ax/Session
+        #//
+        #// возвращает true если:
+        #// пользователь наделен правами локального администратора
+        #// и текущая сессия была запущена runAsAdministrator
+        #//
+        #public static boolean isInRoleAdmin()
+        #{
+        #    anytype perm = new InteropPermission(InteropKind::ClrInterop).assert();
+        #
+        #    System.Security.Principal.WindowsIdentity    id = System.Security.Principal.WindowsIdentity::GetCurrent();
+        #    System.Security.Principal.WindowsPrincipal   principal = new System.Security.Principal.WindowsPrincipal(id);
+        #    System.Security.Principal.WindowsBuiltInRole admin = System.Security.Principal.WindowsBuiltInRole::Administrator;
+        #
+        #    boolean ret = principal.IsInRole(admin);
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: PRN
+
+; Microsoft Dynamics AX Project : Session unloaded
+; --------------------------------------------------------------------------------
+  PROJECTVERSION 2
+  
+  PROJECT #Session
+  SHARED
+  PROPERTIES
+    Name                #Session
+    Origin              #{58D30312-E005-4EE1-B8B2-707E80A07165}
+  ENDPROPERTIES
+  
+    PROJECTCLASS ProjectNode
+    BEGINNODE
+      FILETYPE 0
+      UTILTYPE 45
+      UTILOBJECTID 61440
+      NODETYPE 329
+      NAME #Session
+    ENDNODE
+  ENDPROJECT
+  
+
+***Element: END
