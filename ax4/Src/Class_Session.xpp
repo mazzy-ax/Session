@@ -1,6 +1,6 @@
 ﻿
     //
-    // https://github.com/mazzy-ax/SysSession
+    // https://github.com/mazzy-ax/Session
     //
     // возвращает true если:
     // пользователь наделен правами локального администратора
