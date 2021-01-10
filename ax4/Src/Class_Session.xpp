@@ -1,0 +1,21 @@
+﻿
+    //
+    // https://github.com/mazzy-ax/SysSession
+    //
+    // возвращает true если:
+    // пользователь наделен правами локального администратора
+    // и текущая сессия была запущена runAsAdministrator
+    //
+    public static boolean isInRoleAdmin()
+    {
+        anytype perm = new InteropPermission(InteropKind::ClrInterop).assert();
+
+        System.Security.Principal.WindowsIdentity    id = System.Security.Principal.WindowsIdentity::GetCurrent();
+        System.Security.Principal.WindowsPrincipal   principal = new System.Security.Principal.WindowsPrincipal(id);
+        System.Security.Principal.WindowsBuiltInRole admin = ClrInterop::parseClrEnum('System.Security.Principal.WindowsBuiltInRole','Administrator');
+
+        boolean ret = principal.IsInRole(admin);
+        ;
+
+        return ret;
+    }
