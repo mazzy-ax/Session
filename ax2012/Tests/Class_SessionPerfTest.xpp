@@ -9,18 +9,13 @@ class SessionPerfTest extends Object
     public void testIsInRoleAdmin_Cached(int iterations)
     {
         SysStopwatch    timer       = SysStopwatch::startNew();
-        DictClass       dcSession   = new DictClass(classnum(Session));
         boolean         isAdmin;
         int             i;
         ;
 
-        new ExecutePermission().assert();
-        classFactory.globalObjectCache().clear('SessionFlags');
-
         for( i=1; i<=iterations; i++ )
         {
-            // точно такой же способ вызова, что и protected isInRoleAdminImpl
-            isAdmin = dcSession.callStatic('isInRoleAdmin');
+            isAdmin = Session::isInRoleAdmin();
         }
 
         info(strfmt("%1: %2, %3", xGlobal::clientKind(), funcname(), timer.elapsedWide()));
@@ -29,18 +24,13 @@ class SessionPerfTest extends Object
     public void testIsInRoleAdmin_Impl(int iterations)
     {
         SysStopwatch    timer       = SysStopwatch::startNew();
-        DictClass       dcSession   = new DictClass(classnum(Session));
         boolean         isAdmin;
         int             i;
         ;
 
-        new ExecutePermission().assert();
-        classFactory.globalCache().clear('SessionFlags');
-
         for( i=1; i<=iterations; i++ )
         {
-            // игнорируем модификатор protected
-            isAdmin = dcSession.callStatic('isInRoleAdminImpl');
+            isAdmin = Session::isInRoleAdmin(true);
         }
 
         info(strfmt("%1: %2, %3", xGlobal::clientKind(), funcname(), timer.elapsedWide()));
