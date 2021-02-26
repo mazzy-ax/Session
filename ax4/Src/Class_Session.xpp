@@ -9,8 +9,13 @@
     //
     public static boolean isInRoleAdmin(boolean skipCache = false)
     {
-        anytype cached = skipCache ? '' : classfactory.globalCache().get('SessionFlags', 'isInRoleAdmin', '');
         boolean ret;
+        anytype cached;
+
+        if( !skipCache )
+        {
+            cached = classfactory.globalCache().get('SessionFlags', 'isInRoleAdmin', '');
+        }
 
         if( typeof(cached) == Types::Integer )
         {
