@@ -1,132 +1,16 @@
-// This is a framework class. Customizing this class may cause problems with future upgrades to the software.
-class Session extends xSession
-{
-
-
-    /// <summary>
-    /// Gets a port of the AOS service.
-    /// </summary>
-    /// <returns>
-    /// A port number of the AOS service.
-    /// </returns>
-    int aosPort()
-    {
-        ;
-        if(this.sessionId() != new xSession().sessionId())
-            return 0;
-
-        return Session::getAOSPort();
-    }
-
-    /// <summary>
-    ///     Gets the client mode of the AOS service.
-    /// </summary>
-    /// <returns>
-    ///     Returns the client mode value of the AOS service.
-    /// </returns>
-    static AOSClientMode aosClientMode()
-    {
-        return AOSClientMode::Thin;
-    }
-
-    /// <summary>
-    /// Gets an AOS instance name.
-    /// </summary>
-    /// <returns>
-    /// An AOS instance name.
-    /// </returns>
-    static server str getAOSInstance()
-    {
-        SysClientSessions clientSessions;
-        SysServerSessions serverSessions;
-        xSession currentSession = new xSession();
-        SkipAOSValidationPermission skipAOS;
-        ;
-
-        skipAOS = new SkipAOSValidationPermission();
-        skipAOS.assert();
-
-        //BP deviation documented
-        clientSessions.skipAosValidation(true);
-
-        //BP deviation documented
-        serverSessions.skipAosValidation(true);
-
-        // Get the instance name of server session currently connected to.
-        select Instance_Name from serverSessions
-            exists join clientSessions where clientSessions.ServerId == serverSessions.ServerId
-            && clientSessions.SessionId == currentSession.sessionId();
-
-
-        return serverSessions.Instance_Name;
-    }
-
-    /// <summary>
-    /// Gets a port of the AOS service.
-    /// </summary>
-    /// <returns>
-    /// A port number of the AOS service.
-    /// </returns>
-    static server int getAOSPort()
-    {
-        SysClientSessions clientSessions;
-        SysServerSessions serverSessions;
-        List aosIDList;
-        xSession currentSession = new xSession();
-        ListEnumerator enumerator;
-        SkipAOSValidationPermission skipAOS;
-        ;
-        skipAOS = new SkipAOSValidationPermission();
-        skipAOS.assert();
-
-        //BP deviation documented
-        clientSessions.skipAosValidation(true);
-        //BP deviation documented
-        serverSessions.skipAosValidation(true);
-
-        select aosId from serverSessions
-            exists join clientSessions where clientSessions.ServerId == serverSessions.ServerId
-            && clientSessions.SessionId == currentSession.sessionId();
-        aosIDList = strSplit(serverSessions.aosId, '@');
-
-        enumerator = aosIDList.getEnumerator();
-        if(enumerator.moveNext() && enumerator.moveNext())
-            return str2int(enumerator.current());
-        else
-            return 0;
-    }
-
-    /// <summary>
-    /// Indicates whether the client kind is a business connector.
-    /// </summary>
-    /// <returns>
-    /// true if the client kind is a business connector; otherwise, false.
-    /// </returns>
-    static client server boolean isBusinessConnector()
-    {
-        Session session = new Session();
-        ;
-        return session.clientKind() == ClientType::COMObject;
-    }
-
 
     //
     // https://github.com/mazzy-ax/Session
-    // v1.1
+    // v1.2
     //
     // возвращает true если:
     // пользователь наделен правами локального администратора
     // и текущая сессия была запущена runAsAdministrator
     //
-    public static boolean isInRoleAdmin(boolean skipCache = false)
+    public static boolean isInRoleAdmin()
     {
         boolean ret;
-        container cached;
-
-        if( !skipCache )
-        {
-            cached = classfactory.globalObjectCache().find('SessionFlags', ['isInRoleAdmin']);
-        }
+        container cached = classfactory.globalObjectCache().find('SessionFlags', ['isInRoleAdmin']);
 
         if( cached )
         {
@@ -134,7 +18,7 @@ class Session extends xSession
         }
         else
         {
-            ret = Session::isInRoleAdminImpl();
+            ret = Session::isInRoleAdmin_Slow();
 
             classfactory.globalObjectCache().insert('SessionFlags', ['isInRoleAdmin'], [ret]);
         }
@@ -144,7 +28,7 @@ class Session extends xSession
 
     //
     // https://github.com/mazzy-ax/Session
-    // v1.1
+    // v1.2
     //
     // возвращает true если:
     // пользователь наделен правами локального администратора
@@ -152,7 +36,7 @@ class Session extends xSession
     //
     // используйте метод isInRoleAdmin(), в котором выполняется кэширование
     //
-    protected static boolean isInRoleAdminImpl()
+    public static boolean isInRoleAdmin_Slow()
     {
         anytype perm = new InteropPermission(InteropKind::ClrInterop).assert();
 
@@ -165,17 +49,3 @@ class Session extends xSession
 
         return ret;
     }
-
-    /// <summary>
-    /// Indicates whether the client kind is a server.
-    /// </summary>
-    /// <returns>
-    /// true if the client kind is a server; otherwise, false.
-    /// </returns>
-    static client server boolean isServer()
-    {
-        Session session = new Session();
-        ;
-        return session.clientKind() == ClientType::Server;
-    }
-}

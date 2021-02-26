@@ -6,12 +6,12 @@ class SessionPerfTest extends Object
 {
 
 
-    public void testIsInRoleAdmin_Cached(int iterations)
+    public void testIsInRoleAdmin(int iterations)
     {
-        SysStopwatch    timer       = SysStopwatch::startNew();
+        anytype         chacheCleared = classFactory.globalObjectCache().clear('SessionFlags');
+        SysStopwatch    timer         = SysStopwatch::startNew();
         boolean         isAdmin;
         int             i;
-        ;
 
         for( i=1; i<=iterations; i++ )
         {
@@ -21,16 +21,15 @@ class SessionPerfTest extends Object
         info(strfmt("%1: %2, %3", xGlobal::clientKind(), funcname(), timer.elapsedWide()));
     }
 
-    public void testIsInRoleAdmin_Impl(int iterations)
+    public void testIsInRoleAdmin_Slow(int iterations)
     {
-        SysStopwatch    timer       = SysStopwatch::startNew();
+        SysStopwatch    timer = SysStopwatch::startNew();
         boolean         isAdmin;
         int             i;
-        ;
 
         for( i=1; i<=iterations; i++ )
         {
-            isAdmin = Session::isInRoleAdmin(true);
+            isAdmin = Session::isInRoleAdmin_Slow();
         }
 
         info(strfmt("%1: %2, %3", xGlobal::clientKind(), funcname(), timer.elapsedWide()));
@@ -44,11 +43,11 @@ class SessionPerfTest extends Object
         int iterations = 10000;
         ;
 
-        onClient.testIsInRoleAdmin_Cached(iterations);
-        onClient.testIsInRoleAdmin_Impl(iterations);
+        onClient.testIsInRoleAdmin(iterations);
+        onClient.testIsInRoleAdmin_Slow(iterations);
 
-        onServer.testIsInRoleAdmin_Cached(iterations);
-        onServer.testIsInRoleAdmin_Impl(iterations);
+        onServer.testIsInRoleAdmin(iterations);
+        onServer.testIsInRoleAdmin_Slow(iterations);
     }
 
 }

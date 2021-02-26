@@ -1,21 +1,16 @@
 
     //
     // https://github.com/mazzy-ax/Session
-    // v1.1
+    // v1.2
     //
     // возвращает true если:
     // пользователь наделен правами локального администратора
     // и текущая сессия была запущена runAsAdministrator
     //
-    public static boolean isInRoleAdmin(boolean skipCache = false)
+    public static boolean isInRoleAdmin()
     {
         boolean ret;
-        anytype cached;
-
-        if( !skipCache )
-        {
-            cached = classfactory.globalCache().get('SessionFlags', 'isInRoleAdmin', '');
-        }
+        anytype cached = classfactory.globalCache().get('SessionFlags', 'isInRoleAdmin', '');
 
         if( typeof(cached) == Types::Integer )
         {
@@ -23,7 +18,7 @@
         }
         else
         {
-            ret = Session::isInRoleAdminImpl();
+            ret = Session::isInRoleAdmin_Slow();
 
             classfactory.globalCache().set('SessionFlags', 'isInRoleAdmin', ret);
         }
@@ -33,7 +28,7 @@
 
     //
     // https://github.com/mazzy-ax/Session
-    // v1.1
+    // v1.2
     //
     // возвращает true если:
     // пользователь наделен правами локального администратора
@@ -41,7 +36,7 @@
     //
     // используйте метод isInRoleAdmin(), в котором выполняется кэширование
     //
-    protected static boolean isInRoleAdminImpl()
+    public static boolean isInRoleAdmin_Slow()
     {
         anytype perm = new InteropPermission(InteropKind::ClrInterop).assert();
 

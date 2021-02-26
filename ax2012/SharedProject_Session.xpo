@@ -16,143 +16,19 @@ Formatversion: 1
     ENDPROPERTIES
     
     METHODS
-      SOURCE #aosPort
-        #/// <summary>
-        #/// Gets a port of the AOS service.
-        #/// </summary>
-        #/// <returns>
-        #/// A port number of the AOS service.
-        #/// </returns>
-        #int aosPort()
-        #{
-        #    ;
-        #    if(this.sessionId() != new xSession().sessionId())
-        #        return 0;
-        #
-        #    return Session::getAOSPort();
-        #}
-      ENDSOURCE
-      SOURCE #classDeclaration
-        #// This is a framework class. Customizing this class may cause problems with future upgrades to the software.
-        #class Session extends xSession
-        #{
-        #
-        #}
-      ENDSOURCE
-      SOURCE #aosClientMode
-        #/// <summary>
-        #///     Gets the client mode of the AOS service.
-        #/// </summary>
-        #/// <returns>
-        #///     Returns the client mode value of the AOS service.
-        #/// </returns>
-        #static AOSClientMode aosClientMode()
-        #{
-        #    return AOSClientMode::Thin;
-        #}
-      ENDSOURCE
-      SOURCE #getAOSInstance
-        #/// <summary>
-        #/// Gets an AOS instance name.
-        #/// </summary>
-        #/// <returns>
-        #/// An AOS instance name.
-        #/// </returns>
-        #static server str getAOSInstance()
-        #{
-        #    SysClientSessions clientSessions;
-        #    SysServerSessions serverSessions;
-        #    xSession currentSession = new xSession();
-        #    SkipAOSValidationPermission skipAOS;
-        #    ;
-        #
-        #    skipAOS = new SkipAOSValidationPermission();
-        #    skipAOS.assert();
-        #
-        #    //BP deviation documented
-        #    clientSessions.skipAosValidation(true);
-        #
-        #    //BP deviation documented
-        #    serverSessions.skipAosValidation(true);
-        #
-        #    // Get the instance name of server session currently connected to.
-        #    select Instance_Name from serverSessions
-        #        exists join clientSessions where clientSessions.ServerId == serverSessions.ServerId
-        #        && clientSessions.SessionId == currentSession.sessionId();
-        #
-        #
-        #    return serverSessions.Instance_Name;
-        #}
-      ENDSOURCE
-      SOURCE #getAOSPort
-        #/// <summary>
-        #/// Gets a port of the AOS service.
-        #/// </summary>
-        #/// <returns>
-        #/// A port number of the AOS service.
-        #/// </returns>
-        #static server int getAOSPort()
-        #{
-        #    SysClientSessions clientSessions;
-        #    SysServerSessions serverSessions;
-        #    List aosIDList;
-        #    xSession currentSession = new xSession();
-        #    ListEnumerator enumerator;
-        #    SkipAOSValidationPermission skipAOS;
-        #    ;
-        #    skipAOS = new SkipAOSValidationPermission();
-        #    skipAOS.assert();
-        #
-        #    //BP deviation documented
-        #    clientSessions.skipAosValidation(true);
-        #    //BP deviation documented
-        #    serverSessions.skipAosValidation(true);
-        #
-        #    select aosId from serverSessions
-        #        exists join clientSessions where clientSessions.ServerId == serverSessions.ServerId
-        #        && clientSessions.SessionId == currentSession.sessionId();
-        #    aosIDList = strSplit(serverSessions.aosId, '@');
-        #
-        #    enumerator = aosIDList.getEnumerator();
-        #    if(enumerator.moveNext() && enumerator.moveNext())
-        #        return str2int(enumerator.current());
-        #    else
-        #        return 0;
-        #}
-      ENDSOURCE
-      SOURCE #isBusinessConnector
-        #/// <summary>
-        #/// Indicates whether the client kind is a business connector.
-        #/// </summary>
-        #/// <returns>
-        #/// true if the client kind is a business connector; otherwise, false.
-        #/// </returns>
-        #static client server boolean isBusinessConnector()
-        #{
-        #    Session session = new Session();
-        #    ;
-        #    return session.clientKind() == ClientType::COMObject;
-        #}
-        #
-      ENDSOURCE
       SOURCE #isInRoleAdmin
         #//
         #// https://github.com/mazzy-ax/Session
-        #// v1.1
+        #// v1.2
         #//
         #// возвращает true если:
         #// пользователь наделен правами локального администратора
         #// и текущая сессия была запущена runAsAdministrator
         #//
-        #public static boolean isInRoleAdmin(boolean skipCache = false)
+        #public static boolean isInRoleAdmin()
         #{
         #    boolean ret;
-        #    container cached;
-        #
-        #    if( !skipCache )
-        #    {
-        #        cached = classfactory.globalObjectCache().find('SessionFlags', ['isInRoleAdmin']);
-        #    }
+        #    container cached = classfactory.globalObjectCache().find('SessionFlags', ['isInRoleAdmin']);
         #
         #    if( cached )
         #    {
@@ -160,7 +36,7 @@ Formatversion: 1
         #    }
         #    else
         #    {
-        #        ret = Session::isInRoleAdminImpl();
+        #        ret = Session::isInRoleAdmin_Slow();
         #
         #        classfactory.globalObjectCache().insert('SessionFlags', ['isInRoleAdmin'], [ret]);
         #    }
@@ -168,10 +44,10 @@ Formatversion: 1
         #    return ret;
         #}
       ENDSOURCE
-      SOURCE #isInRoleAdminImpl
+      SOURCE #isInRoleAdmin_Slow
         #//
         #// https://github.com/mazzy-ax/Session
-        #// v1.1
+        #// v1.2
         #//
         #// возвращает true если:
         #// пользователь наделен правами локального администратора
@@ -179,7 +55,7 @@ Formatversion: 1
         #//
         #// используйте метод isInRoleAdmin(), в котором выполняется кэширование
         #//
-        #protected static boolean isInRoleAdminImpl()
+        #public static boolean isInRoleAdmin_Slow()
         #{
         #    anytype perm = new InteropPermission(InteropKind::ClrInterop).assert();
         #
@@ -191,20 +67,6 @@ Formatversion: 1
         #    ;
         #
         #    return ret;
-        #}
-      ENDSOURCE
-      SOURCE #isServer
-        #/// <summary>
-        #/// Indicates whether the client kind is a server.
-        #/// </summary>
-        #/// <returns>
-        #/// true if the client kind is a server; otherwise, false.
-        #/// </returns>
-        #static client server boolean isServer()
-        #{
-        #    Session session = new Session();
-        #    ;
-        #    return session.clientKind() == ClientType::Server;
         #}
       ENDSOURCE
     ENDMETHODS
@@ -234,13 +96,13 @@ Formatversion: 1
         #
         #}
       ENDSOURCE
-      SOURCE #testIsInRoleAdmin_Cached
-        #public void testIsInRoleAdmin_Cached(int iterations)
+      SOURCE #testIsInRoleAdmin
+        #public void testIsInRoleAdmin(int iterations)
         #{
-        #    SysStopwatch    timer       = SysStopwatch::startNew();
+        #    anytype         chacheCleared = classFactory.globalObjectCache().clear('SessionFlags');
+        #    SysStopwatch    timer         = SysStopwatch::startNew();
         #    boolean         isAdmin;
         #    int             i;
-        #    ;
         #
         #    for( i=1; i<=iterations; i++ )
         #    {
@@ -250,17 +112,16 @@ Formatversion: 1
         #    info(strfmt("%1: %2, %3", xGlobal::clientKind(), funcname(), timer.elapsedWide()));
         #}
       ENDSOURCE
-      SOURCE #testIsInRoleAdmin_Impl
-        #public void testIsInRoleAdmin_Impl(int iterations)
+      SOURCE #testIsInRoleAdmin_Slow
+        #public void testIsInRoleAdmin_Slow(int iterations)
         #{
-        #    SysStopwatch    timer       = SysStopwatch::startNew();
+        #    SysStopwatch    timer = SysStopwatch::startNew();
         #    boolean         isAdmin;
         #    int             i;
-        #    ;
         #
         #    for( i=1; i<=iterations; i++ )
         #    {
-        #        isAdmin = Session::isInRoleAdmin(true);
+        #        isAdmin = Session::isInRoleAdmin_Slow();
         #    }
         #
         #    info(strfmt("%1: %2, %3", xGlobal::clientKind(), funcname(), timer.elapsedWide()));
@@ -275,11 +136,11 @@ Formatversion: 1
         #    int iterations = 10000;
         #    ;
         #
-        #    onClient.testIsInRoleAdmin_Cached(iterations);
-        #    onClient.testIsInRoleAdmin_Impl(iterations);
+        #    onClient.testIsInRoleAdmin(iterations);
+        #    onClient.testIsInRoleAdmin_Slow(iterations);
         #
-        #    onServer.testIsInRoleAdmin_Cached(iterations);
-        #    onServer.testIsInRoleAdmin_Impl(iterations);
+        #    onServer.testIsInRoleAdmin(iterations);
+        #    onServer.testIsInRoleAdmin_Slow(iterations);
         #}
         #
       ENDSOURCE
