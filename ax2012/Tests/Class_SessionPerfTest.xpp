@@ -1,0 +1,64 @@
+//
+// https://github.com/mazzy-ax/Session
+// v1.1
+//
+class SessionPerfTest extends Object
+{
+
+
+    public void testIsInRoleAdmin_Cached(int iterations)
+    {
+        SysStopwatch    timer       = SysStopwatch::startNew();
+        DictClass       dcSession   = new DictClass(classnum(Session));
+        boolean         isAdmin;
+        int             i;
+        ;
+
+        new ExecutePermission().assert();
+        classFactory.globalObjectCache().clear('SessionFlags');
+
+        for( i=1; i<=iterations; i++ )
+        {
+            // точно такой же способ вызова, что и protected isInRoleAdminImpl
+            isAdmin = dcSession.callStatic('isInRoleAdmin');
+        }
+
+        info(strfmt("%1: %2, %3", xGlobal::clientKind(), funcname(), timer.elapsedWide()));
+    }
+
+    public void testIsInRoleAdmin_Impl(int iterations)
+    {
+        SysStopwatch    timer       = SysStopwatch::startNew();
+        DictClass       dcSession   = new DictClass(classnum(Session));
+        boolean         isAdmin;
+        int             i;
+        ;
+
+        new ExecutePermission().assert();
+        classFactory.globalCache().clear('SessionFlags');
+
+        for( i=1; i<=iterations; i++ )
+        {
+            // игнорируем модификатор protected
+            isAdmin = dcSession.callStatic('isInRoleAdminImpl');
+        }
+
+        info(strfmt("%1: %2, %3", xGlobal::clientKind(), funcname(), timer.elapsedWide()));
+    }
+
+    public static void main(Args args)
+    {
+        SessionPerfTest onClient = ClassFactory::makeObjectOnClient(classnum(SessionPerfTest));
+        SessionPerfTest onServer = ClassFactory::makeObjectOnServer(classnum(SessionPerfTest));
+
+        int iterations = 10000;
+        ;
+
+        onClient.testIsInRoleAdmin_Cached(iterations);
+        onClient.testIsInRoleAdmin_Impl(iterations);
+
+        onServer.testIsInRoleAdmin_Cached(iterations);
+        onServer.testIsInRoleAdmin_Impl(iterations);
+    }
+
+}

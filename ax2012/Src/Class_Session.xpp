@@ -1,12 +1,47 @@
-﻿
+
     //
     // https://github.com/mazzy-ax/Session
+    // v1.1
     //
     // возвращает true если:
     // пользователь наделен правами локального администратора
     // и текущая сессия была запущена runAsAdministrator
     //
-    public static boolean isInRoleAdmin()
+    public static boolean isInRoleAdmin(boolean skipCache = false)
+    {
+        boolean ret;
+        container cached;
+
+        if( !skipCache )
+        {
+            cached = classfactory.globalObjectCache().find('SessionFlags', ['isInRoleAdmin']);
+        }
+
+        if( cached )
+        {
+            [ret] = cached;
+        }
+        else
+        {
+            ret = Session::isInRoleAdminImpl();
+
+            classfactory.globalObjectCache().insert('SessionFlags', ['isInRoleAdmin'], [ret]);
+        }
+
+        return ret;
+    }
+
+    //
+    // https://github.com/mazzy-ax/Session
+    // v1.1
+    //
+    // возвращает true если:
+    // пользователь наделен правами локального администратора
+    // и текущая сессия была запущена runAsAdministrator
+    //
+    // используйте метод isInRoleAdmin(), в котором выполняется кэширование
+    //
+    protected static boolean isInRoleAdminImpl()
     {
         anytype perm = new InteropPermission(InteropKind::ClrInterop).assert();
 
@@ -15,6 +50,7 @@
         System.Security.Principal.WindowsBuiltInRole admin = System.Security.Principal.WindowsBuiltInRole::Administrator;
 
         boolean ret = principal.IsInRole(admin);
+        ;
 
         return ret;
     }

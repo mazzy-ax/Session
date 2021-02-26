@@ -19,12 +19,43 @@ Formatversion: 1
       SOURCE #isInRoleAdmin
         #//
         #// https://github.com/mazzy-ax/Session
+        #// v1.1
         #//
         #// возвращает true если:
         #// пользователь наделен правами локального администратора
         #// и текущая сессия была запущена runAsAdministrator
         #//
-        #public static boolean isInRoleAdmin()
+        #public static boolean isInRoleAdmin(boolean skipCache = false)
+        #{
+        #    anytype cached = skipCache ? '' : classfactory.globalCache().get('SessionFlags', 'isInRoleAdmin', '');
+        #    boolean ret;
+        #
+        #    if( typeof(cached) == Types::Integer )
+        #    {
+        #        ret = cached;
+        #    }
+        #    else
+        #    {
+        #        ret = Session::isInRoleAdminImpl();
+        #
+        #        classfactory.globalCache().set('SessionFlags', 'isInRoleAdmin', ret);
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #isInRoleAdminImpl
+        #//
+        #// https://github.com/mazzy-ax/Session
+        #// v1.1
+        #//
+        #// возвращает true если:
+        #// пользователь наделен правами локального администратора
+        #// и текущая сессия была запущена runAsAdministrator
+        #//
+        #// используйте метод isInRoleAdmin(), в котором выполняется кэширование
+        #//
+        #protected static boolean isInRoleAdminImpl()
         #{
         #    anytype perm = new InteropPermission(InteropKind::ClrInterop).assert();
         #
@@ -37,6 +68,85 @@ Formatversion: 1
         #
         #    return ret;
         #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: CLS
+
+; Microsoft Dynamics AX Class: SessionPerfTest unloaded
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #SessionPerfTest
+    PROPERTIES
+      Name                #SessionPerfTest
+      Extends             #Object
+      RunOn               #Called from
+    ENDPROPERTIES
+    
+    METHODS
+      Version: 3
+      SOURCE #classDeclaration
+        #//
+        #// https://github.com/mazzy-ax/Session
+        #// v1.1
+        #//
+        #class SessionPerfTest extends Object
+        #{
+        #
+        #}
+      ENDSOURCE
+      SOURCE #testisInRoleAdmin_Cached
+        #public void testIsInRoleAdmin_Cached(int iterations)
+        #{
+        #    SysStopwatch    timer   = SysStopwatch::startNew();
+        #    boolean         isAdmin;
+        #    int             i;
+        #    ;
+        #
+        #    classFactory.globalCache().clear('SessionFlags');
+        #
+        #    for( i=1; i<=iterations; i++ )
+        #    {
+        #        isAdmin = Session::isInRoleAdmin();
+        #    }
+        #
+        #    info(strfmt("%1: %2, %3", xGlobal::clientKind(), funcname(), timer.elapsedWide()));
+        #}
+      ENDSOURCE
+      SOURCE #testIsInRoleAdmin_Impl
+        #public void testIsInRoleAdmin_Impl(int iterations)
+        #{
+        #    SysStopwatch    timer       = SysStopwatch::startNew();
+        #    boolean         isAdmin;
+        #    int             i;
+        #    ;
+        #
+        #    for( i=1; i<=iterations; i++ )
+        #    {
+        #        isAdmin = Session::isInRoleAdmin(true);
+        #    }
+        #
+        #    info(strfmt("%1: %2, %3", xGlobal::clientKind(), funcname(), timer.elapsedWide()));
+        #}
+      ENDSOURCE
+      SOURCE #main
+        #public static void main(Args args)
+        #{
+        #    SessionPerfTest onClient = ClassFactory::makeObjectOnClient(classnum(SessionPerfTest));
+        #    SessionPerfTest onServer = ClassFactory::makeObjectOnServer(classnum(SessionPerfTest));
+        #
+        #    int iterations = 10000;
+        #    ;
+        #
+        #    onClient.testIsInRoleAdmin_Cached(iterations);
+        #    onClient.testIsInRoleAdmin_Impl(iterations);
+        #
+        #    onServer.testIsInRoleAdmin_Cached(iterations);
+        #    onServer.testIsInRoleAdmin_Impl(iterations);
+        #}
+        #
       ENDSOURCE
     ENDMETHODS
   ENDCLASS
@@ -60,6 +170,13 @@ Formatversion: 1
       UTILOBJECTID 61440
       NODETYPE 329
       NAME #Session
+    ENDNODE
+    BEGINNODE
+      FILETYPE 0
+      UTILTYPE 45
+      UTILOBJECTID 55349
+      NODETYPE 329
+      NAME #SessionPerfTest
     ENDNODE
   ENDPROJECT
   

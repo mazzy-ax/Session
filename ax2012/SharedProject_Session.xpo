@@ -19,12 +19,48 @@ Formatversion: 1
       SOURCE #isInRoleAdmin
         #//
         #// https://github.com/mazzy-ax/Session
+        #// v1.1
         #//
         #// возвращает true если:
         #// пользователь наделен правами локального администратора
         #// и текущая сессия была запущена runAsAdministrator
         #//
-        #public static boolean isInRoleAdmin()
+        #public static boolean isInRoleAdmin(boolean skipCache = false)
+        #{
+        #    boolean ret;
+        #    container cached;
+        #
+        #    if( !skipCache )
+        #    {
+        #        cached = classfactory.globalObjectCache().find('SessionFlags', ['isInRoleAdmin']);
+        #    }
+        #
+        #    if( cached )
+        #    {
+        #        [ret] = cached;
+        #    }
+        #    else
+        #    {
+        #        ret = Session::isInRoleAdminImpl();
+        #
+        #        classfactory.globalObjectCache().insert('SessionFlags', ['isInRoleAdmin'], [ret]);
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #isInRoleAdminImpl
+        #//
+        #// https://github.com/mazzy-ax/Session
+        #// v1.1
+        #//
+        #// возвращает true если:
+        #// пользователь наделен правами локального администратора
+        #// и текущая сессия была запущена runAsAdministrator
+        #//
+        #// используйте метод isInRoleAdmin(), в котором выполняется кэширование
+        #//
+        #protected static boolean isInRoleAdminImpl()
         #{
         #    anytype perm = new InteropPermission(InteropKind::ClrInterop).assert();
         #
@@ -33,9 +69,96 @@ Formatversion: 1
         #    System.Security.Principal.WindowsBuiltInRole admin = System.Security.Principal.WindowsBuiltInRole::Administrator;
         #
         #    boolean ret = principal.IsInRole(admin);
+        #    ;
         #
         #    return ret;
         #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: CLS
+
+; Microsoft Dynamics AX Class: SessionPerfTest unloaded
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #SessionPerfTest
+    PROPERTIES
+      Name                #SessionPerfTest
+      Extends             #Object
+      Origin              #{7BD82EBE-0234-4C5E-A8B5-C77A77A4A158}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #//
+        #// https://github.com/mazzy-ax/Session
+        #// v1.1
+        #//
+        #class SessionPerfTest extends Object
+        #{
+        #
+        #}
+      ENDSOURCE
+      SOURCE #testIsInRoleAdmin_Cached
+        #public void testIsInRoleAdmin_Cached(int iterations)
+        #{
+        #    SysStopwatch    timer       = SysStopwatch::startNew();
+        #    DictClass       dcSession   = new DictClass(classnum(Session));
+        #    boolean         isAdmin;
+        #    int             i;
+        #    ;
+        #
+        #    new ExecutePermission().assert();
+        #    classFactory.globalObjectCache().clear('SessionFlags');
+        #
+        #    for( i=1; i<=iterations; i++ )
+        #    {
+        #        // точно такой же способ вызова, что и protected isInRoleAdminImpl
+        #        isAdmin = dcSession.callStatic('isInRoleAdmin');
+        #    }
+        #
+        #    info(strfmt("%1: %2, %3", xGlobal::clientKind(), funcname(), timer.elapsedWide()));
+        #}
+      ENDSOURCE
+      SOURCE #testIsInRoleAdmin_Impl
+        #public void testIsInRoleAdmin_Impl(int iterations)
+        #{
+        #    SysStopwatch    timer       = SysStopwatch::startNew();
+        #    DictClass       dcSession   = new DictClass(classnum(Session));
+        #    boolean         isAdmin;
+        #    int             i;
+        #    ;
+        #
+        #    new ExecutePermission().assert();
+        #    classFactory.globalCache().clear('SessionFlags');
+        #
+        #    for( i=1; i<=iterations; i++ )
+        #    {
+        #        // игнорируем модификатор protected
+        #        isAdmin = dcSession.callStatic('isInRoleAdminImpl');
+        #    }
+        #
+        #    info(strfmt("%1: %2, %3", xGlobal::clientKind(), funcname(), timer.elapsedWide()));
+        #}
+      ENDSOURCE
+      SOURCE #main
+        #public static void main(Args args)
+        #{
+        #    SessionPerfTest onClient = ClassFactory::makeObjectOnClient(classnum(SessionPerfTest));
+        #    SessionPerfTest onServer = ClassFactory::makeObjectOnServer(classnum(SessionPerfTest));
+        #
+        #    int iterations = 10000;
+        #    ;
+        #
+        #    onClient.testIsInRoleAdmin_Cached(iterations);
+        #    onClient.testIsInRoleAdmin_Impl(iterations);
+        #
+        #    onServer.testIsInRoleAdmin_Cached(iterations);
+        #    onServer.testIsInRoleAdmin_Impl(iterations);
+        #}
+        #
       ENDSOURCE
     ENDMETHODS
   ENDCLASS
@@ -60,6 +183,13 @@ Formatversion: 1
       UTILOBJECTID 61440
       NODETYPE 329
       NAME #Session
+    ENDNODE
+    BEGINNODE
+      FILETYPE 0
+      UTILTYPE 45
+      UTILOBJECTID 1024217
+      NODETYPE 329
+      NAME #SessionPerfTest
     ENDNODE
   ENDPROJECT
   
