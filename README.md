@@ -29,7 +29,7 @@
 
 В таблице ниже показано время выполнения этих тестов на моем ноутбуке &ndash; кэширование признака `isInRoleAdmin` вполне имеет смысл.
 
-| Метод | Вызов .net | SysGlobalCache | SysGlobalObjectCache |
+| Метод, 10тыс | Вызов .net | SysGlobalCache | SysGlobalObjectCache |
 |-|-|-|-|
 | ax4.Client | 00:00:01.4116551 | 00:00:00.2632769 | |
 | ax4.Server | 00:00:02.7959503 | 00:00:00.6125915 | |
